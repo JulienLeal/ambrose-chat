@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Chat Example</title>
+  </head>
+  <body>
+    <div id="messages"></div>
+    <form id="message-form">
+      <input type="text" id="message-input" autocomplete="off">
+      <button type="submit">Send</button>
+    </form>
+    <script>
+      let messageInput = document.getElementById("message-input")
+      let messageForm = document.getElementById("message-form")
+      let messagesContainer = document.getElementById("messages")
+
+      messageForm.addEventListener("submit", e => {
+        e.preventDefault()
+        console.log(window.channel)
+        window.channel.push("shout", {body: messageInput.value})
+        messageInput.value = ""
+      })
+
+      window.channel.on("shout", payload => {
+        console.log("payload",payload)
+
+        let messageItem = document.createElement("div")
+        messageItem.innerText = payload.body
+        messagesContainer.appendChild(messageItem)
+      })
+    </script>
+  </body>
+</html>
