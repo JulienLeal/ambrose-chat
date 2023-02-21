@@ -2,13 +2,21 @@ defmodule ChatAppWeb.RoomChannel do
   use ChatAppWeb, :channel
 
   @impl true
-  def join("room:lobby", payload, socket) do
-    if authorized?(payload) do
+  def join("room:lobby", %{"params" => %{"nickname" => nickname}}, socket) do
+    # if is_nil(nickname) do
+      randomnickname = Enum.random(["CoolCat", "FriendlyFox", "SillySquirrel", "HappyHippo", "CleverCrab"])
+      socket = assign(socket, :nickname, randomnickname)
+    # else
+      # socket = assign(socket, :nickname, nickname)
+    # end
+
+    if authorized?(socket) do
       {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
   end
+
 
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client
@@ -21,7 +29,8 @@ defmodule ChatAppWeb.RoomChannel do
   # broadcast to everyone in the current topic (room:lobby).
   @impl true
   def handle_in("shout", payload, socket) do
-    broadcast(socket, "shout", payload)
+    nickname = socket.assigns.nickname
+    broadcast(socket, "shout", %{nickname: nickname, message: payload})
     {:noreply, socket}
   end
 

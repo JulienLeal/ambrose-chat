@@ -42,10 +42,10 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 
-let socket = new Socket("/socket", {})
+let socket = new Socket("/socket")
 socket.connect()
 
-let channel = socket.channel("room:lobby", {})
+let channel = socket.channel("room:lobby", {params:{nickname: ""}})
 channel.join()
 
 window.socket = socket

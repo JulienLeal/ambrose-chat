@@ -11,6 +11,8 @@
       <button type="submit">Send</button>
     </form>
     <script>
+    window.onload = function() {
+
       let messageInput = document.getElementById("message-input")
       let messageForm = document.getElementById("message-form")
       let messagesContainer = document.getElementById("messages")
@@ -26,9 +28,10 @@
         console.log("payload",payload)
 
         let messageItem = document.createElement("div")
-        messageItem.innerText = payload.body
+        messageItem.innerText = payload.message.body
         messagesContainer.appendChild(messageItem)
       })
+    }
     </script>
   </body>
 </html>
