@@ -9,7 +9,7 @@ The Phoenix Framework is a powerful web framework built on top of the Elixir pro
 
 In addition, the Phoenix Framework promotes a functional programming style, making it easier to write clear, maintainable, and testable code. The framework's use of the Actor Model and OTP (Open Telecom Platform) further enhances its ability to handle concurrency and fault tolerance, ensuring that your application remains responsive and resilient under heavy loads.
 
-## What's the trade-off of Phoenix Framework between Socket.io?
+## What's the trade-off between Phoenix Framework and Socket.io?
 In terms of performance, Phoenix is generally regarded as more performant than Socket.io, thanks to its use of the BEAM virtual machine and the OTP (Open Telecom Platform) library, which allow for efficient handling of concurrency and fault tolerance. This can be particularly advantageous for applications that need to handle a large number of users and real-time interactions.
 Another important consideration is the learning curve. Due to its use of functional programming concepts with Elixir/Erlang and its unique language syntax, Phoenix can have a steeper learning curve. Socket.io, on the other hand, uses a more conventional JavaScript syntax, making it easier for developers with JavaScript experience to get started quickly.
 In terms of scalability, Phoenix is the better choice. However, for starting a real-time chat conversation, Socket.io can be a good choice initially. I prefer to use Phoenix Framework by first because I want to scale Ambrose Chat as faster as I can with a low cost of infrastructure.
