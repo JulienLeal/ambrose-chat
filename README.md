@@ -14,7 +14,7 @@ In terms of performance, Phoenix is generally regarded as more performant than S
 Another important consideration is the learning curve. Due to its use of functional programming concepts with Elixir/Erlang and its unique language syntax, Phoenix can have a steeper learning curve. Socket.io, on the other hand, uses a more conventional JavaScript syntax, making it easier for developers with JavaScript experience to get started quickly.
 In terms of scalability, Phoenix is the better choice. However, for starting a real-time chat conversation, Socket.io can be a good choice initially. I prefer to use Phoenix Framework by first because I want to scale Ambrose Chat as faster as I can with a low cost of infrastructure.
 
-## Important concepts:
+## Important concepts for understanding the project:
 
 ### How Channels in Phoenix works?
 Phoenix channels are used for real-time communication between a server and connected clients over WebSockets. Channels enable bidirectional communication, which means both the server and the client can send and receive messages. Channels are designed to work seamlessly with the Phoenix framework and can be used in combination with Phoenix's existing features like controllers and views.
@@ -39,18 +39,30 @@ LiveView works by using the Phoenix channels, which establish a persistent conne
 
 LiveView templates use a simple and familiar syntax that looks and feels like standard Elixir/Phoenix templates, and they can use any Elixir code, including database queries and other back-end operations. This makes it easy to create complex interfaces without having to write complex JavaScript.
 
-## About Infrastructure:
+### How to scale this chat provided by Phoenix Framework?
+To scale an Elixir/Phoenix Framework application, you'll need to have a good understanding of the following concepts:
 
-### How to scale it?
-There's a famous benchmarking of Phoenix Framework in this [link](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections)
+- OTP (Open Telecom Platform): This is a library of tools for building distributed, concurrent, and fault-tolerant applications. OTP provides an infrastructure for creating processes, threads, and virtual machines in Elixir, allowing the construction of highly scalable and resilient systems.
 
+- Supervisors: These are special processes that monitor and manage other processes. They are used in conjunction with OTP to ensure that Elixir/Phoenix applications can automatically recover from failures, by isolating and restarting processes that have failed.
+
+- Genservers: These are processes in Elixir that perform a specific task and respond to requests from other processes. They are often used to represent components in a system, such as a database or messaging system.
+
+- Concurrency: Elixir is a language designed to work with concurrency efficiently and safely. With concurrency, it's possible to perform multiple tasks in parallel, allowing systems to quickly respond to events and processes.
+
+There's a famous benchmarking of Phoenix Framework that Phoenix Framework teams provide: [link](https://phoenixframework.org/blog/the-road-to-2-million-websocket-connections)
+
+### Useful links for understanding the project:
+- [Official Phoenix Framework](https://phoenixframework.org/)
+- [Phoenix Summarized](https://www.toptal.com/phoenix/phoenix-rails-like-framework-web-apps)
+- [Elixir School Step By Step](https://elixirschool.com/blog/phoenix-live-view/)
+  
 ### Important Commands:
 
 #### To create new phoenix channel:
 ```
 mix phx.gen.channel Room
 ```
-
 #### The command that I`ve generated the Dockerfile:
 ```
 mix phx.gen.release --docker
@@ -70,4 +82,5 @@ mix phx.server
 - [ ] Security Concerns
 - [ ] Chat Authentication
 - [ ] Custom Profile Picture
+- [ ] Structure to integrate the Phoenix Presence
 - [ ] CMS Pannel for Managing The Chat Rooms
