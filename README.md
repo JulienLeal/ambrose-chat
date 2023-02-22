@@ -2,6 +2,7 @@
 
 ## What is Ambrose Chat?
 The Ambrose Chat is a chat widget application that seamlessly integrates with your website to provide to your website a chat experience. This built using vanilla javascript and phoenix framework and provides real-time conversations for your users.
+![Ambrose Chat](/assets//chat.png)
 
 ## Why I choose Phoenix Framework?
 The Phoenix Framework is a powerful web framework built on top of the Elixir programming language, designed to enable the development of highly concurrent and fault-tolerant applications. One of the main reasons why I chose to use Phoenix for the project is its ability to handle large volumes of traffic with ease. With its built-in support for WebSockets and real-time messaging, Phoenix allows for efficient communication between the server and client, enabling seamless user experiences.
@@ -61,8 +62,9 @@ mix phx.server
 ```
 
 ## The next steps:
-- [ ] Render as iframe for the website can use as widget
-- [ ] Dockerize the project
+- [ ] Integrate the autocomplete functionality
+- [ ] Render as Iframe for any website can use as widget
+- [ ] Dockerize the Project
 - [ ] Custom Nickname
 - [ ] Modeling Database
 - [ ] Security Concerns
