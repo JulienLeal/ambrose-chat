@@ -45,7 +45,7 @@ liveSocket.connect()
 let socket = new Socket("/socket")
 socket.connect()
 
-let channel = socket.channel("room:lobby", {params:{nickname: ""}})
+let channel = socket.channel("room:lobby", {params:{nickname: "user_" + Date.now()}})
 channel.join()
 
 window.socket = socket

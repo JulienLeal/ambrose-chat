@@ -96,7 +96,8 @@
         window.channel.on("shout", payload => {
           let messageItem = document.createElement("div")
           messageItem.classList.add("chat-message")
-          messageItem.innerText = payload.message.body
+          console.log(payload)
+          messageItem.innerHTML = "<span style='font-weight: bold'>" + payload.nickname + ": </span>" + payload.message.body
           messagesContainer.appendChild(messageItem)
           messagesContainer.scrollTop = messagesContainer.scrollHeight
         })

@@ -3,12 +3,8 @@ defmodule ChatAppWeb.RoomChannel do
 
   @impl true
   def join("room:lobby", %{"params" => %{"nickname" => nickname}}, socket) do
-    # if is_nil(nickname) do
-      randomnickname = Enum.random(["CoolCat", "FriendlyFox", "SillySquirrel", "HappyHippo", "CleverCrab"])
-      socket = assign(socket, :nickname, randomnickname)
-    # else
-      # socket = assign(socket, :nickname, nickname)
-    # end
+    socket = socket |> assign(:nickname, nickname)
+
 
     if authorized?(socket) do
       {:ok, socket}
@@ -16,7 +12,6 @@ defmodule ChatAppWeb.RoomChannel do
       {:error, %{reason: "unauthorized"}}
     end
   end
-
 
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client
