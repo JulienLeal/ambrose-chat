@@ -119,23 +119,23 @@
     </div>
     <script>
       window.onload = function() {
+        const users = [];
 
         let autocompleteInput = document.getElementById("autocomplete-input")
         let messageForm = document.getElementById("message-form")
         let messagesContainer = document.getElementById("messages")
 
-        // Listen for the input event on the autocomplete input field
         autocompleteInput.addEventListener("input", function() {
           if (autocompleteInput.value.indexOf("@") !== -1) {
             let targetUserName = autocompleteInput.value.substring(autocompleteInput.value.lastIndexOf("@") + 1);
             let suggestions = getUsersPossibilities(targetUserName, users);
+
             appendInList(suggestions);
           } else {
             cleanList();
           }
         })
 
-        // Listen for the keydown event on the autocomplete input field
          autocompleteInput.addEventListener("keydown", function(e) {
           if (e.code === "Tab") {
             e.preventDefault();
@@ -164,6 +164,10 @@
           cleanList();
         })
 
+        window.channel.on("user:entered", payload=>{
+          users.push({name:payload.nickname, id:payload.nickname });
+        })
+
         window.channel.on("shout", payload => {
           let messageItem = document.createElement("div");
           messageItem.classList.add("chat-message");
@@ -173,20 +177,8 @@
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         })
 
-        // Functions for handling the autocomplete functionality
 
-       const listFather = document.getElementById("suggestions");
-
-
-        const users = [
-          { name: "john", id: 1 },
-          { name: "jane", id: 2 },
-          { name: "richard", id: 3 },
-          { name: "robert", id: 4 },
-          { name: "vini", id: 4 },
-          { name: "manu", id: 4 },
-        ];
-
+        const listFather = document.getElementById("suggestions");
         let targetUserName = "";
         let actualList = [];
 

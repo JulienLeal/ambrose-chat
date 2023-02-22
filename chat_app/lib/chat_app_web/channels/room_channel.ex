@@ -5,12 +5,18 @@ defmodule ChatAppWeb.RoomChannel do
   def join("room:lobby", %{"params" => %{"nickname" => nickname}}, socket) do
     socket = socket |> assign(:nickname, nickname)
 
-
     if authorized?(socket) do
-      {:ok, socket}
-    else
+        send(self(), :after_join)
+        {:ok, nickname, socket}
+      else
       {:error, %{reason: "unauthorized"}}
     end
+  end
+
+  def handle_info(:after_join, socket) do
+    nickname = socket.assigns.nickname
+    broadcast(socket, "user:entered", %{nickname: nickname})
+    {:noreply, socket}
   end
 
   # Channels can be used in a request/response fashion
