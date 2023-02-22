@@ -44,9 +44,10 @@ liveSocket.connect()
 
 let socket = new Socket("/socket")
 socket.connect()
-
-let channel = socket.channel("room:lobby", {params:{nickname: "user_" + Date.now()}})
-channel.join()
+const nickname = "user_" + `${Date.now().toString().slice(-5)}`
+let channel = socket.channel("room:lobby", {params:{nickname}})
+channel.join().receive("ok", resp => { console.log("Joined successfully", resp) })
+.receive("error", resp => { console.log("Unable to join", resp) });
 
 window.socket = socket
 window.channel = channel
