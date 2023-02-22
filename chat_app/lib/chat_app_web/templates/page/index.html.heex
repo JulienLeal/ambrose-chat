@@ -3,7 +3,7 @@
   <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <meta charset="utf-8">
-    <title>Chat Example</title>
+    <title>Ambrose Chat</title>
     <style>
       /* Chat window styles */
       .chat-window {
@@ -36,14 +36,19 @@
         margin-bottom: 10px;
         border-radius: 5px;
       }
+
       .chat-form {
+        position : relative;
+      }
+
+      .chat-form div {
         display: flex;
         padding: 6px;
         background-color: #fff;
         border-top: 1px solid #ccc;
       }
 
-      .chat-input {
+      div .chat-input {
         flex: 1;
         margin-right: 10px;
         padding: 5px;
@@ -52,7 +57,7 @@
         box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1);
       }
 
-      .chat-submit {
+      div .chat-submit {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -69,38 +74,142 @@
         margin: 0;
       }
 
+      li {
+        cursor: pointer;
+        padding: 5px 10px;
+        margin-bottom: 0px;
+      }
+
+      .chat-autocomplete li:hover {
+        background:#f2f2f2;
+      }
+
+      .chat-autocomplete {
+        position: absolute;
+        height: auto;
+        max-height: 100px;
+        overflow-y: scroll;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        bottom: 65px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+        z-index: 1;
+      }
+
     </style>
   </head>
   <body>
     <div class="chat-window">
-      <div class="chat-header">Chat Example</div>
+      <div class="chat-header">Ambrose Chat</div>
       <div class="chat-messages" id="messages"></div>
       <form class="chat-form" id="message-form">
-  <input type="text" class="chat-input" id="message-input" placeholder="Type your message...">
-  <button type="submit" class="chat-submit"><i class="fas fa-paper-plane fa-lg"></i></button>
+          <ul class="chat-autocomplete" id="suggestions"></ul>
+          <div>
+            <input type="text" class="chat-input" autocomplete="off" id="autocomplete-input" placeholder="Type your message...">
+            <button type="submit" class="chat-submit"><i class="fas fa-paper-plane fa-lg"></i></button>
+          </div>
       </form>
+
+
     </div>
     <script>
       window.onload = function() {
 
-        let messageInput = document.getElementById("message-input")
+        let autocompleteInput = document.getElementById("autocomplete-input")
         let messageForm = document.getElementById("message-form")
         let messagesContainer = document.getElementById("messages")
 
+        // Listen for the input event on the autocomplete input field
+        autocompleteInput.addEventListener("input", function() {
+          if (autocompleteInput.value.indexOf("@") !== -1) {
+            let targetUserName = autocompleteInput.value.substring(autocompleteInput.value.lastIndexOf("@") + 1);
+            let suggestions = getUsersPossibilities(targetUserName, users);
+            appendInList(suggestions);
+          } else {
+            cleanList();
+          }
+        })
+
+        // Listen for the keydown event on the autocomplete input field
+         autocompleteInput.addEventListener("keydown", function(e) {
+          if (e.code === "Tab") {
+            e.preventDefault();
+            let target = actualList[0];
+            if (target === undefined)
+              return;
+            const index = autocompleteInput.value.lastIndexOf('@');
+            let newText = autocompleteInput.value.slice(0, index + 1) + target.name;
+            autocompleteInput.value = newText;
+            cleanList();
+          } else if (e.code === "Backspace") {
+            let targetUserName = autocompleteInput.value.substring(autocompleteInput.value.lastIndexOf("@") + 1);
+            if (targetUserName.length === 0) {
+              cleanList();
+            } else {
+              let suggestions = getUsersPossibilities(targetUserName, users);
+              appendInList(suggestions);
+            }
+          }
+        })
+
         messageForm.addEventListener("submit", e => {
-          e.preventDefault()
-          window.channel.push("shout", {body: messageInput.value})
-          messageInput.value = ""
+          e.preventDefault();
+          window.channel.push("shout", { body: autocompleteInput.value });
+          autocompleteInput.value = "";
+          cleanList();
         })
 
         window.channel.on("shout", payload => {
-          let messageItem = document.createElement("div")
-          messageItem.classList.add("chat-message")
-          console.log(payload)
-          messageItem.innerHTML = "<span style='font-weight: bold'>" + payload.nickname + ": </span>" + payload.message.body
-          messagesContainer.appendChild(messageItem)
-          messagesContainer.scrollTop = messagesContainer.scrollHeight
+          let messageItem = document.createElement("div");
+          messageItem.classList.add("chat-message");
+          console.log(payload);
+          messageItem.innerHTML = "<span style='font-weight: bold'>" + payload.nickname + ": </span>" + payload.message.body;
+          messagesContainer.appendChild(messageItem);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
         })
+
+        // Functions for handling the autocomplete functionality
+
+       const listFather = document.getElementById("suggestions");
+
+
+        const users = [
+          { name: "john", id: 1 },
+          { name: "jane", id: 2 },
+          { name: "richard", id: 3 },
+          { name: "robert", id: 4 },
+          { name: "vini", id: 4 },
+          { name: "manu", id: 4 },
+        ];
+
+        let targetUserName = "";
+        let actualList = [];
+
+        function getUsersPossibilities(input, array) {
+          if (!input.trim())
+            return array;
+          return array.filter(x => x.name.toLowerCase().startsWith(input.toLowerCase()));
+        }
+
+        function appendInList(items) {
+          cleanList();
+          for (let item in items) {
+            let newLi = document.createElement("li");
+            newLi.appendChild(document.createTextNode(items[item].name));
+            listFather.appendChild(newLi);
+          }
+          actualList = items;
+        }
+
+        function cleanList() {
+          listFather.innerHTML = "";
+          actualList = [];
+        }
       }
     </script>
   </body>
