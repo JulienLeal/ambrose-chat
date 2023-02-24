@@ -44,9 +44,9 @@ To scale an Elixir/Phoenix Framework application, you'll need to have a good und
 
 - OTP (Open Telecom Platform): This is a library of tools for building distributed, concurrent, and fault-tolerant applications. OTP provides an infrastructure for creating processes, threads, and virtual machines in Elixir, allowing the construction of highly scalable and resilient systems.
 
-- Supervisors: These are special processes that monitor and manage other processes. They are used in conjunction with OTP to ensure that Elixir/Phoenix applications can automatically recover from failures, by isolating and restarting processes that have failed.
+- Supervisors: They're a fundamental part of OTP and are used to ensure that Elixir/Phoenix applications can automatically recover from failures by isolating and restarting processes that have failed.
 
-- Genservers: These are processes in Elixir that perform a specific task and respond to requests from other processes. They are often used to represent components in a system, such as a database or messaging system.
+- Genservers: These are processes in Elixir that perform a specific task and respond to requests from other processes. 
 
 - Concurrency: Elixir is a language designed to work with concurrency efficiently and safely. With concurrency, it's possible to perform multiple tasks in parallel, allowing systems to quickly respond to events and processes.
 
@@ -74,13 +74,13 @@ mix phx.server
 ```
 
 ## The next steps:
-- [ ] Integrate the autocomplete functionality
 - [ ] Render as Iframe for any website can use as widget
 - [ ] Dockerize the Project
 - [ ] Custom Nickname
-- [ ] Modeling Database
-- [ ] Security Concerns
 - [ ] Chat Authentication
-- [ ] Custom Profile Picture
+- [ ] Security Concerns
 - [ ] Structure to integrate the Phoenix Presence
+- [ ] Modeling Database
+- [ ] Profile Persistence
+- [ ] Custom Profile Picture
 - [ ] CMS Pannel for Managing The Chat Rooms
