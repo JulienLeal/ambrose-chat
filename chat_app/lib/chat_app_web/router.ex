@@ -21,6 +21,12 @@ defmodule ChatAppWeb.Router do
 
   end
 
+  scope "/widget", ChatAppWeb do
+    pipe_through :browser
+
+    get "/chat", WidgetController, :init
+  end
+
 
   # Other scopes may use custom stacks.
   # scope "/api", ChatAppWeb do

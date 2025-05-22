@@ -1,0 +1,145 @@
+<div style="display: flex; font-family: Arial, sans-serif;">
+  <div style="flex: 3; padding-right: 20px;">
+    <h1>Chat Widget</h1>
+
+    <div>
+      <input type="text" id="nickname-input" placeholder="Enter your nickname" style="width: 70%; padding: 10px; margin-bottom: 5px;" />
+      <button id="set-nickname-button" style="width: 28%; padding: 10px;">Set Nickname</button>
+    </div>
+
+    <div id="chat-messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; margin-top: 10px; background: #f9f9f9;">
+      <!-- Messages will appear here -->
+    </div>
+    <div>
+      <input type="text" id="message-input" placeholder="Type your message..." style="width: 80%; padding: 10px;" />
+      <button id="send-button" style="width: 18%; padding: 10px;">Send</button>
+    </div>
+  </div>
+
+  <div style="flex: 1; border-left: 1px solid #ccc; padding-left: 20px;">
+    <h2>Online Users</h2>
+    <ul id="user-list" style="list-style-type: none; padding: 0;">
+      <!-- Online users will be listed here -->
+    </ul>
+  </div>
+</div>
+
+<script>
+  // NOTE: This is a placeholder for client-side channel integration.
+  // The actual implementation will require Phoenix.Socket and Channel setup
+  // to communicate with the RoomChannel.
+
+  const nicknameInput = document.getElementById('nickname-input');
+  const setNicknameButton = document.getElementById('set-nickname-button');
+  const messageInput = document.getElementById('message-input');
+  const sendButton = document.getElementById('send-button');
+  const chatMessages = document.getElementById('chat-messages');
+  const userListElement = document.getElementById('user-list');
+
+  let currentNickname = "Guest"; // Default nickname
+  let presences = {}; // To store presence state
+
+  // Example: User joins a specific room, e.g., "widget_room"
+  const currentRoom = "public_room"; // Replace with dynamic room later
+
+  // --- Presence Helper Functions (from Phoenix docs example) ---
+  function renderOnlineUsers(presences) {
+    userListElement.innerHTML = ""; // Clear current list
+    Phoenix.Presence.list(presences, (id, {metas: [user, ...rest]}) => {
+      // 'user' is the first meta entry, 'rest' are others if any due to multiple connections
+      const nickname = user.nickname || "Guest"; // Fallback
+      const listItem = document.createElement("li");
+      listItem.textContent = nickname + (user.status ? ` (${user.status})` : "");
+      listItem.id = `user-${id}`; // Assign an ID for potential updates/removals
+      userListElement.appendChild(listItem);
+    });
+  }
+
+  setNicknameButton.addEventListener('click', () => {
+    const newNickname = nicknameInput.value.trim();
+    if (newNickname !== '') {
+      currentNickname = newNickname;
+      nicknameInput.value = ''; // Clear input
+      // TODO: Send nickname to Phoenix Channel
+      // Example (pseudo-code):
+      // channel.push("set_nickname", { nickname: currentNickname })
+      //   .receive("ok", (resp) => console.log("Nickname updated", resp))
+      //   .receive("error", (resp) => console.error("Nickname update failed", resp));
+      console.log(`Nickname set to: ${currentNickname}. TODO: Send to channel.`);
+      const infoElement = document.createElement('div');
+      infoElement.textContent = `Nickname changed to: ${currentNickname}`;
+      infoElement.style.fontStyle = 'italic';
+      infoElement.style.color = '#555';
+      chatMessages.appendChild(infoElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  });
+
+  sendButton.addEventListener('click', () => {
+    const messageText = messageInput.value;
+    if (messageText.trim() !== '') {
+      // Display message locally (placeholder - actual message display should come from channel broadcast for consistency)
+      // const messageElement = document.createElement('div');
+      // messageElement.innerHTML = `<strong>${currentNickname}:</strong> ${messageText}`;
+      // chatMessages.appendChild(messageElement);
+      // chatMessages.scrollTop = chatMessages.scrollHeight;
+      messageInput.value = '';
+
+      // TODO: Send message through Phoenix Channel
+      // Example (pseudo-code):
+      // channel.push("shout", { message: messageText }); // Nickname is handled by channel state using socket.assigns
+    }
+  });
+
+  // --- Placeholder for Phoenix Channel Event Handlers ---
+
+  // TODO: channel.on("presence_state", state => {
+  //   presences = Phoenix.Presence.syncState(presences, state);
+  //   renderOnlineUsers(presences);
+  //   console.log("Presence state received:", presences);
+  // });
+
+  // TODO: channel.on("presence_diff", diff => {
+  //   presences = Phoenix.Presence.syncDiff(presences, diff);
+  //   renderOnlineUsers(presences);
+  //   console.log("Presence diff received:", diff);
+  // });
+
+  // TODO: channel.on("shout", (payload) => { // Message from other users (or self if server broadcasts back)
+  //   const messageElement = document.createElement('div');
+  //   const senderNickname = payload.nickname || "Guest";
+  //   messageElement.innerHTML = `<strong>${senderNickname}:</strong> ${payload.message}`;
+  //   chatMessages.appendChild(messageElement);
+  //   chatMessages.scrollTop = chatMessages.scrollHeight;
+  // });
+
+  // TODO: channel.on("user:entered", (payload) => { // Optional: if you want specific join messages
+  //   const infoElement = document.createElement('div');
+  //   infoElement.textContent = payload.message || `${payload.nickname} joined.`;
+  //   infoElement.style.fontStyle = 'italic';
+  //   infoElement.style.color = 'green';
+  //   chatMessages.appendChild(infoElement);
+  //   chatMessages.scrollTop = chatMessages.scrollHeight;
+  // });
+
+  // TODO: channel.on("nickname_changed", (payload) => { // Optional: if you want specific nickname change messages
+  //   const infoElement = document.createElement('div');
+  //   infoElement.textContent = payload.message || `${payload.old_nickname} is now ${payload.new_nickname}.`;
+  //   infoElement.style.fontStyle = 'italic';
+  //   infoElement.style.color = 'blue';
+  //   chatMessages.appendChild(infoElement);
+  //   chatMessages.scrollTop = chatMessages.scrollHeight;
+  // });
+
+
+  // Placeholder for joining the channel
+  console.log(`Attempting to join channel for room: ${currentRoom}. Full channel integration needed.`);
+  // TODO: When channel is joined (e.g. channel.join().receive("ok", resp => { ... })),
+  // if a nickname is already set (e.g. from localStorage), send it.
+  // The join params in socket.js would be like:
+  // let channel = socket.channel("room:lobby", { nickname: currentNickname || "Guest" })
+
+  // Initial render of (empty) user list for styling
+  renderOnlineUsers(presences);
+
+</script>
