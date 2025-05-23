@@ -1,0 +1,240 @@
+<style>
+  .hidden {
+    display: none !important;
+  }
+  #loading-indicator {
+    display: flex; /* Changed from inline 'text-align: center' to flex for better centering */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* position: absolute; /* Consider if this is needed; for now, it will be a block */
+    /* top: 0; left: 0; width: 100%; height: 100%; */ /* Fullscreen overlay might be too much if widget is embedded */
+    padding: 40px 20px; /* Increased padding for better visual centering if not fullscreen */
+    font-family: Arial, sans-serif;
+    text-align: center; /* Kept for text within the flex items */
+    /* background-color: rgba(255, 255, 255, 0.9); /* Optional overlay */
+    /* z-index: 100; */
+  }
+  .spinner {
+    margin: 20px auto; /* Increased margin */
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<div id="loading-indicator"> <!-- Inline styles removed, handled by CSS block above -->
+  <p>Connecting to chat...</p>
+  <div class="spinner"></div> <!-- Inline styles removed -->
+</div>
+
+<div id="chat-interface" class="hidden" style="display: flex; font-family: Arial, sans-serif;">
+  <div style="flex: 3; padding-right: 20px;">
+    <h1>Chat Widget</h1>
+
+    <div>
+      <input type="text" id="nickname-input" placeholder="Enter your nickname" style="width: 70%; padding: 10px; margin-bottom: 5px;" />
+      <button id="set-nickname-button" style="width: 28%; padding: 10px;">Set Nickname</button>
+    </div>
+
+    <div id="chat-messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; margin-top: 10px; background: #f9f9f9;">
+      <!-- Messages will appear here -->
+    </div>
+    <div>
+      <input type="text" id="message-input" placeholder="Type your message..." style="width: 80%; padding: 10px;" />
+      <button id="send-button" style="width: 18%; padding: 10px;">Send</button>
+    </div>
+  </div>
+
+  <div style="flex: 1; border-left: 1px solid #ccc; padding-left: 20px;">
+    <h2>Online Users</h2>
+    <ul id="user-list" style="list-style-type: none; padding: 0;">
+      <!-- Online users will be listed here -->
+    </ul>
+  </div>
+</div>
+<!-- The script tag should be outside the #chat-interface div if it controls its visibility -->
+<script>
+  // Ensure Phoenix.Socket and Phoenix.Presence are loaded (typically via app.js)
+  if (typeof Phoenix === "undefined" || typeof Phoenix.Socket === "undefined") {
+    console.error("Phoenix JS libraries not found. Ensure app.js is loaded and includes them.");
+    // You might want to display an error to the user in the widget UI
+    document.getElementById('chat-messages').innerHTML = "<p style='color:red;'>Error: Chat components could not be loaded. Please try again later.</p>";
+  }
+
+  const nicknameInput = document.getElementById('nickname-input');
+  const setNicknameButton = document.getElementById('set-nickname-button');
+  const messageInput = document.getElementById('message-input');
+  const sendButton = document.getElementById('send-button');
+  const chatMessages = document.getElementById('chat-messages');
+  const userListElement = document.getElementById('user-list');
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const chatInterface = document.getElementById('chat-interface');
+
+  let currentNickname = `Guest${Math.floor(Math.random() * 1000)}`; // Initial random guest nickname
+  nicknameInput.value = currentNickname; // Pre-fill for convenience
+  let presences = {};
+
+  let socket;
+  let channel;
+
+  function connectToChannel() {
+    // Assuming Phoenix.Socket is available globally via app.js
+    socket = new Phoenix.Socket("/socket", { params: {} }); // No token needed for this basic setup
+    socket.connect();
+
+    channel = socket.channel("room:lobby", { nickname: currentNickname });
+
+    channel.join()
+      .receive("ok", resp => {
+        console.log("Joined successfully!", resp);
+
+        loadingIndicator.classList.add('hidden');
+        chatInterface.classList.remove('hidden');
+
+        // It's good practice to clear any previous messages or errors from chatMessages
+        // if the loading indicator was shown due to a reconnect attempt, for example.
+        // However, if this is the first load, chatMessages would be empty from the server.
+        // For simplicity, we can assume chatMessages is initially empty or gets populated
+        // by join messages after this.
+        // chatMessages.innerHTML = ""; // Let's clear it for a clean state, though joinMsgElement will be first.
+
+        const joinMsgElement = document.createElement('div');
+        joinMsgElement.textContent = resp.message || `Joined as ${resp.nickname || currentNickname}`;
+        joinMsgElement.style.fontStyle = 'italic';
+        joinMsgElement.style.color = 'green';
+        chatMessages.appendChild(joinMsgElement);
+        currentNickname = resp.nickname || currentNickname; // Update nickname from server response (e.g. if guest name was assigned)
+        nicknameInput.value = currentNickname;
+
+
+        // --- Register Channel Event Handlers ---
+        channel.on("presence_state", state => {
+          presences = Phoenix.Presence.syncState(presences, state);
+          renderOnlineUsers(presences);
+          console.log("Presence state received:", presences);
+        });
+
+        channel.on("presence_diff", diff => {
+          presences = Phoenix.Presence.syncDiff(presences, diff);
+          renderOnlineUsers(presences);
+          console.log("Presence diff received:", diff);
+        });
+
+        channel.on("shout", (payload) => {
+          const messageElement = document.createElement('div');
+          const senderNickname = payload.nickname || "Guest";
+          // Basic XSS protection: createTextNode or ensure server sanitizes.
+          // For this example, assuming payload.message is safe or will be made safe.
+          messageElement.innerHTML = `<strong>${document.createTextNode(senderNickname).textContent}:</strong> ${document.createTextNode(payload.message).textContent}`;
+          // Highlight own messages
+          if (payload.id === socket.connection.id) { // socket.connection.id is available after connect
+             messageElement.style.backgroundColor = "#e6efff"; // Light blue background for own messages
+          }
+          chatMessages.appendChild(messageElement);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        channel.on("user:entered", (payload) => {
+          const infoElement = document.createElement('div');
+          infoElement.textContent = payload.message || `${payload.nickname} joined.`;
+          infoElement.style.fontStyle = 'italic';
+          infoElement.style.color = 'green';
+          chatMessages.appendChild(infoElement);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        channel.on("nickname_changed", (payload) => {
+          const infoElement = document.createElement('div');
+          infoElement.textContent = payload.message || `${payload.old_nickname} is now ${payload.new_nickname}.`;
+          infoElement.style.fontStyle = 'italic';
+          infoElement.style.color = 'blue';
+          chatMessages.appendChild(infoElement);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          // Update user list if the changed nickname is in presences
+          renderOnlineUsers(presences); // Re-render to catch nickname changes if meta includes it for presence
+        });
+
+      })
+      .receive("error", resp => {
+        console.error("Unable to join channel", resp);
+        // Update loader text, keep loader visible, ensure chat is hidden.
+        const loadingText = loadingIndicator.querySelector('p');
+        if (loadingText) {
+          loadingText.textContent = `Failed to connect: ${resp.reason || "Unknown error"}. Please try refreshing.`;
+        }
+        const spinner = loadingIndicator.querySelector('.spinner');
+        if (spinner) {
+          spinner.classList.add('hidden'); // Hide spinner, show static error text
+        }
+        loadingIndicator.classList.remove('hidden'); // Ensure loader is visible
+        chatInterface.classList.add('hidden'); // Ensure chat is hidden
+
+        // The original error display inside chatMessages is now superseded by the loading indicator message
+        // chatMessages.innerHTML = `<p style='color:red;'>Error: Could not connect to chat room. Reason: ${resp.reason || 'Unknown error'}. Please try again later.</p>`;
+      });
+  }
+
+
+  // --- Presence Helper Functions ---
+  function renderOnlineUsers(presences) {
+    userListElement.innerHTML = "";
+    if (typeof Phoenix.Presence !== 'undefined') {
+      Phoenix.Presence.list(presences, (id, {metas: [user, ...rest]}) => {
+        const nickname = user.nickname || "Guest";
+        const listItem = document.createElement("li");
+        listItem.textContent = nickname + (user.status ? ` (${user.status})` : "");
+        listItem.id = `user-${id}`;
+        userListElement.appendChild(listItem);
+      });
+    }
+  }
+
+  setNicknameButton.addEventListener('click', () => {
+    const newNickname = nicknameInput.value.trim();
+    if (newNickname !== '' && newNickname !== currentNickname) {
+      if (channel) {
+        channel.push("set_nickname", { nickname: newNickname })
+          .receive("ok", (resp) => {
+            console.log("Nickname updated successfully", resp);
+            currentNickname = resp.nickname || newNickname; // Update from server confirmation
+            nicknameInput.value = currentNickname; // Reflect confirmed nickname
+            // Informative message handled by "nickname_changed" broadcast
+          })
+          .receive("error", (resp) => {
+            console.error("Nickname update failed", resp);
+            const errorElement = document.createElement('div');
+            errorElement.textContent = `Error changing nickname: ${resp.reason || 'Failed'}`;
+            errorElement.style.color = 'red';
+            chatMessages.appendChild(errorElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          });
+      } else {
+        currentNickname = newNickname; // Update locally if channel not yet up
+        console.log("Nickname updated locally (channel not connected): " + currentNickname);
+      }
+    }
+  });
+
+  sendButton.addEventListener('click', () => {
+    const messageText = messageInput.value;
+    if (messageText.trim() !== '' && channel) {
+      channel.push("shout", { message: messageText })
+        .receive("ok", () => console.log("Message sent."))
+        .receive("error", () => console.error("Failed to send message."));
+      messageInput.value = '';
+    }
+  });
+
+  // Initial setup
+  renderOnlineUsers(presences); // Render empty list initially
+  connectToChannel(); // Attempt to connect when script loads
+
+</script>

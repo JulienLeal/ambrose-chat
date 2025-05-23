@@ -1,0 +1,21 @@
+# Docker specific
+.dockerignore
+Dockerfile
+# Elixir & Mix
+.elixir_ls
+.iex.exs
+deps
+_build
+# Git
+.git
+# Node
+node_modules
+# Test & CI
+cover
+# Runtime
+rel/chat_app/var
+rel/chat_app/log
+# Mac OS
+.DS_Store
+# Windows
+Thumbs.db
