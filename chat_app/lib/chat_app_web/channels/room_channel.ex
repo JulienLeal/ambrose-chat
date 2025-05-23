@@ -59,6 +59,16 @@ defmodule ChatAppWeb.RoomChannel do
       {:reply, {:error, %{reason: "Nickname cannot be empty."}}, socket}
     else
       socket = assign(socket, :nickname, new_nickname)
+
+      # Re-track presence with the new nickname
+      Presence.track(socket, socket.id, %{
+        nickname: new_nickname,
+        online_at: inspect(System.system_time(:second)), # Consider if online_at should be from original join or updated
+        status: "online"
+      })
+      # The track above will cause a presence_diff to be broadcasted,
+      # which will make clients re-render their user lists with the new nickname.
+
       broadcast(socket, "nickname_changed", %{old_nickname: old_nickname, new_nickname: new_nickname, message: "#{old_nickname} is now known as #{new_nickname}."})
       {:reply, {:ok, %{nickname: new_nickname, message: "Nickname changed to #{new_nickname}"}}, socket}
     end
