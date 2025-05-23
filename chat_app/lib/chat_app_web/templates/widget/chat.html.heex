@@ -1,4 +1,41 @@
-<div style="display: flex; font-family: Arial, sans-serif;">
+<style>
+  .hidden {
+    display: none !important;
+  }
+  #loading-indicator {
+    display: flex; /* Changed from inline 'text-align: center' to flex for better centering */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* position: absolute; /* Consider if this is needed; for now, it will be a block */
+    /* top: 0; left: 0; width: 100%; height: 100%; */ /* Fullscreen overlay might be too much if widget is embedded */
+    padding: 40px 20px; /* Increased padding for better visual centering if not fullscreen */
+    font-family: Arial, sans-serif;
+    text-align: center; /* Kept for text within the flex items */
+    /* background-color: rgba(255, 255, 255, 0.9); /* Optional overlay */
+    /* z-index: 100; */
+  }
+  .spinner {
+    margin: 20px auto; /* Increased margin */
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<div id="loading-indicator"> <!-- Inline styles removed, handled by CSS block above -->
+  <p>Connecting to chat...</p>
+  <div class="spinner"></div> <!-- Inline styles removed -->
+</div>
+
+<div id="chat-interface" class="hidden" style="display: flex; font-family: Arial, sans-serif;">
   <div style="flex: 3; padding-right: 20px;">
     <h1>Chat Widget</h1>
 
@@ -23,7 +60,7 @@
     </ul>
   </div>
 </div>
-
+<!-- The script tag should be outside the #chat-interface div if it controls its visibility -->
 <script>
   // Ensure Phoenix.Socket and Phoenix.Presence are loaded (typically via app.js)
   if (typeof Phoenix === "undefined" || typeof Phoenix.Socket === "undefined") {
@@ -38,6 +75,8 @@
   const sendButton = document.getElementById('send-button');
   const chatMessages = document.getElementById('chat-messages');
   const userListElement = document.getElementById('user-list');
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const chatInterface = document.getElementById('chat-interface');
 
   let currentNickname = `Guest${Math.floor(Math.random() * 1000)}`; // Initial random guest nickname
   nicknameInput.value = currentNickname; // Pre-fill for convenience
@@ -56,7 +95,17 @@
     channel.join()
       .receive("ok", resp => {
         console.log("Joined successfully!", resp);
-        chatMessages.innerHTML = ""; // Clear any previous error messages
+
+        loadingIndicator.classList.add('hidden');
+        chatInterface.classList.remove('hidden');
+
+        // It's good practice to clear any previous messages or errors from chatMessages
+        // if the loading indicator was shown due to a reconnect attempt, for example.
+        // However, if this is the first load, chatMessages would be empty from the server.
+        // For simplicity, we can assume chatMessages is initially empty or gets populated
+        // by join messages after this.
+        // chatMessages.innerHTML = ""; // Let's clear it for a clean state, though joinMsgElement will be first.
+
         const joinMsgElement = document.createElement('div');
         joinMsgElement.textContent = resp.message || `Joined as ${resp.nickname || currentNickname}`;
         joinMsgElement.style.fontStyle = 'italic';
@@ -116,7 +165,20 @@
       })
       .receive("error", resp => {
         console.error("Unable to join channel", resp);
-        chatMessages.innerHTML = `<p style='color:red;'>Error: Could not connect to chat room. Reason: ${resp.reason || 'Unknown error'}. Please try again later.</p>`;
+        // Update loader text, keep loader visible, ensure chat is hidden.
+        const loadingText = loadingIndicator.querySelector('p');
+        if (loadingText) {
+          loadingText.textContent = `Failed to connect: ${resp.reason || "Unknown error"}. Please try refreshing.`;
+        }
+        const spinner = loadingIndicator.querySelector('.spinner');
+        if (spinner) {
+          spinner.classList.add('hidden'); // Hide spinner, show static error text
+        }
+        loadingIndicator.classList.remove('hidden'); // Ensure loader is visible
+        chatInterface.classList.add('hidden'); // Ensure chat is hidden
+
+        // The original error display inside chatMessages is now superseded by the loading indicator message
+        // chatMessages.innerHTML = `<p style='color:red;'>Error: Could not connect to chat room. Reason: ${resp.reason || 'Unknown error'}. Please try again later.</p>`;
       });
   }
 
